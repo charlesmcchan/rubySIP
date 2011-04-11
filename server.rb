@@ -10,7 +10,8 @@ class SIPServer
 			(msg, addr) = sockfd.recvfrom MAXLEN
 			response = Request.new.parse(msg).process
 			sockfd.send(response, 0, addr[3], addr[1]) if response != nil
-			print "\033[31m#{$usertable}\033[m"
+			$usertable.each {|user| puts "\033[31m#{user.inspect}\033[m" }
+			puts ''
 		end
 	end
 end

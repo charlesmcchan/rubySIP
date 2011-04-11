@@ -18,15 +18,9 @@ class Request
 		# parse header and put into hash
 		header.each {|line|
 			case line.chomp!
-			when /^REGISTER.+/ then
-				@type = 'REGISTER'
-				@version = line.split(' ')[2]
-			when /^INVITE.+/ then
-				@type = 'INVITE'
-				@version = line.split(' ')[2]
-			when /^ACK.+/ then
-				@type = 'ACK'
-				@version = line.split(' ')[2]
+			when /^REGISTER.+/ then	(@type, @version) = 'REGISTER', line.split(' ')[2]
+			when /^INVITE.+/ then	(@type, @version) = 'INVITE', line.split(' ')[2]
+			when /^ACK.+/ then (@type, @version) = 'ACK', line.split(' ')[2]
 			else
 				map = line.split(':', 2)
 				@header[map[0]] = map[1]
@@ -38,10 +32,11 @@ class Request
 	end
 
 	def process
-		case @type
-		when 'REGISTER' then response = register
-		when 'INVITE' then response = invite	
-		when 'ACK' then response = ack
+		# dispatch request
+		response = case @type
+		when 'REGISTER' then register
+		when 'INVITE' then invite	
+		when 'ACK' then ack
 		end	
 		# return response
 		print "\033[33m#{response}\033[m"
@@ -52,15 +47,15 @@ class Request
 		# generate response
 		response = "#{@version} 200 OK\r\n"
 		@header.each {|map|
-			next if map[0]=~/Max-Forwards/
+			next if map[0]=='Max-Forwards'
 			response += "#{map[0]}:#{map[1]}\r\n"
 		}
 		response += "\r\n"
 		# add to->contact mapping to usertable
-		#TODO
-		#re-register
-		#un-register
-		$usertable[@header['From']] = @header['Contact']
+		# TODO: register timeout
+		# un-register cannot be done by CCL SIP UA, omitted
+		# re-register is done trivially by the property of Hash
+		$usertable[@header['To']] = @header['Contact']
 		return response
 	end
 	
@@ -68,11 +63,11 @@ class Request
 		# generate response
 		response = "#{@version} 302 Moved Temporarily\r\n"
 		@header.each {|map|
-			next if map[0]=~/Content-.+/ || map[0]=~/Contact/ || map[0]=~/Max-Forwards/
+			next if map[0]=~/Content-.+/ || map[0]=='Contact' || map[0]=='Max-Forwards'
 			response += "#{map[0]}:#{map[1]}\r\n"
 		}
 		# find contact data in usertable
-		response += "Contact: #{$usertable[@header['To']]}"
+		response += "Contact: #{$usertable[@header['To']]}\r\n"
 		response += "\r\n"
 		return response	
 	end
