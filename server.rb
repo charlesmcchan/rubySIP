@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-require 'sip'
+require './sip'
 require 'socket'
 
 class SIPServer
@@ -23,4 +23,4 @@ if ARGV.size != 1 then
 end
 Signal.trap("INT") { exit -1 }
 Signal.trap("TERM") { exit -1 }
-SIPServer.new ARGV[0].to_i 
+SIPServer.new ARGV[0].to_i
