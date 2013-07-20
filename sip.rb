@@ -6,7 +6,7 @@ $usertable = Hash.new
 
 class Request
 	attr_reader :header, :body, :type, :version
-	
+
 	def initialize
 		@header = Hash.new
 	end
@@ -16,7 +16,7 @@ class Request
 		puts "\033[32m#{header}\033[m"
 		puts "\033[36m#{body}\033[m"
 		# parse header and put into hash
-		header.each {|line|
+    header.split("\n").each {|line|
 			case line.chomp!
 			when /^REGISTER.+/ then	(@type, @version) = 'REGISTER', line.split(' ')[2]
 			when /^INVITE.+/ then	(@type, @version) = 'INVITE', line.split(' ')[2]
@@ -25,7 +25,7 @@ class Request
 				map = line.split(':', 2)
 				@header[map[0]] = map[1]
 			end
-		}
+		} unless header.nil?
 		# parse body
 		@body = body
 		return self
@@ -35,9 +35,9 @@ class Request
 		# dispatch request
 		response = case @type
 		when 'REGISTER' then register
-		when 'INVITE' then invite	
+		when 'INVITE' then invite
 		when 'ACK' then ack
-		end	
+		end
 		# return response
 		print "\033[33m#{response}\033[m"
 		return response
@@ -58,7 +58,7 @@ class Request
 		$usertable[@header['To']] = @header['Contact']
 		return response
 	end
-	
+
 	def invite
 		# generate response
 		response = "#{@version} 302 Moved Temporarily\r\n"
@@ -69,7 +69,7 @@ class Request
 		# find contact data in usertable
 		response += "Contact: #{$usertable[@header['To']]}\r\n"
 		response += "\r\n"
-		return response	
+		return response
 	end
 
 	def ack
